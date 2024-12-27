@@ -12,9 +12,9 @@ namespace Emyclax_Category_Store.Models
 
         [DisplayName("Category Name")]  //data annotation to display Name
 
-        [MaxLength(30)]
+        [MaxLength(50)]
 
-        [RegularExpression("^[a-zA-Z]*$", ErrorMessage = "Category can only take string and not numbers.")]
+        [RegularExpression(@"^[^\d]*$", ErrorMessage = "Category name cannot contain numbers.")]
         public string Name { get; set; }
 
         [DisplayName("Quantity Available")] //data annotation to display DisplayOrder
