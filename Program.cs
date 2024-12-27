@@ -1,7 +1,13 @@
+using Emyclax_Category_Store.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+// add sql connections for database
+builder.Services.AddDbContext<Emyclax_Db>(options => options.UseSqlServer(builder.Configuration
+   .GetConnectionString("Default")));    
 
 var app = builder.Build();
 
