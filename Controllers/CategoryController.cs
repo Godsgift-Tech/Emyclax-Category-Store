@@ -32,18 +32,31 @@ namespace Emyclax_Category_Store.Controllers
             {
                 ModelState.AddModelError("name", "The display order cannot exactly match the name");
             }
+         
+            
 
             if (emyCatlog.Name == "sex".ToLower())
             {
                 ModelState.AddModelError("name", "Sex is a forbiden category ");
 
             }
+            // Check for duplicate category name (case-insensitive)
+            bool isDuplicate = await _db.EmyCatlogs
+                .AnyAsync(c => c.Name.ToLower() == emyCatlog.Name.ToLower());
+
+            if (isDuplicate)
+            {
+                ModelState.AddModelError("Name", "A category with the same name already exists.");
+            }
+
+
 
 
             if (ModelState.IsValid)
             {
                 _db.Add(emyCatlog);
                 await _db.SaveChangesAsync();
+                TempData["success"] = "Category was added successfully!";
                 return RedirectToAction(nameof(Index));
             }
             return View();
@@ -59,30 +72,47 @@ namespace Emyclax_Category_Store.Controllers
             return View(emyCatlog);
         }
         [HttpPost]
-        public async Task<IActionResult> Edit(EmyCatlog emyCatlog)
+        public async Task<IActionResult> Edit(Guid id, EmyCatlog emyCatlog)
         {
+            
 
-            if (emyCatlog.Name == "sex".ToLower())
+            if (emyCatlog.Name.ToLower() == "sex")
             {
                 TempData["error"] = "Error! Sex is forbiden here";
-
-                return RedirectToAction("Home, Error");
-
-
+                return View();
             }
-            if (!ModelState.IsValid)
+            // Check for duplicate category name (case-insensitive) but ignore the current record
+            bool isDuplicate = await _db.EmyCatlogs
+               .AnyAsync(c => c.Id != id && c.Name.ToLower() == emyCatlog.Name.ToLower());
+
+              if (isDuplicate)
             {
-                TempData["error"] = "Error! Enter fields correctly";
-                return RedirectToAction("Index");
+                TempData["error"] = "A category with the same name already exists";
+                // return RedirectToAction("Index");
+                return View("Edit");
 
             }
+           
+
 
             if (ModelState.IsValid)
             {
-                _db.Update(emyCatlog);
+                var existingCategory = await _db.EmyCatlogs.FindAsync(id);
+
+                if (existingCategory == null)
+                {
+                    return NotFound();
+                }
+
+                // Update properties
+                existingCategory.Name = emyCatlog.Name;
+                existingCategory.Quantity = emyCatlog.Quantity;
+
                 await _db.SaveChangesAsync();
+                TempData["success"] = "Category was updated successfully!";
                 return RedirectToAction(nameof(Index));
             }
+
             return View(emyCatlog);
         }
         [HttpGet]
@@ -110,6 +140,8 @@ namespace Emyclax_Category_Store.Controllers
             }
             _db.EmyCatlogs.Remove(emyCatlog);
             await _db.SaveChangesAsync();
+            TempData["success"] = " Category deleted successfully";
+
             return RedirectToAction(nameof(Index));
         }
     }
